@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_security import Security
 from home import home_bp
+from accounts import profiles_bp
 from accounts import user_datastore
 from accounts.utils import init_db as init_accounts_db
 from flask_mailman import Mail
@@ -32,6 +33,7 @@ def create_app():
     app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
 
     app.register_blueprint(home_bp, url_prefix='')
+    app.register_blueprint(profiles_bp, url_prefix='/profile')
 
     db.init_app(app)
     mail = Mail(app) # noqa
