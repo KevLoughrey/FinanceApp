@@ -8,7 +8,7 @@ from . import user_datastore
 def init_db():
     db.create_all()
 
-    if not User.query.filter_by(email="admin@example.com").first():
+    if not User.query.filter_by(email=os.getenv("ADMIN_EMAIL")).first():
         user_datastore.create_user(
             email=os.getenv("ADMIN_EMAIL"),
             username=os.getenv("ADMIN_USERNAME"),
