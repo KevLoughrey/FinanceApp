@@ -11,7 +11,6 @@ def init_db():
     if not User.query.filter_by(email=os.getenv("ADMIN_EMAIL")).first():
         user_datastore.create_user(
             email=os.getenv("ADMIN_EMAIL"),
-            username=os.getenv("ADMIN_USERNAME"),
             password=hash_password(os.getenv("ADMIN_PASSWORD"))
         )
         db.session.commit()
