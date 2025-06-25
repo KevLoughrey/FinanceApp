@@ -32,7 +32,7 @@ def create_app():
     app.register_blueprint(home_bp, url_prefix='')
 
     db.init_app(app)
-    security = Security(app, user_datastore)
+    security = Security(app, user_datastore) # noqa F841
 
     with app.app_context():
         init_accounts_db()
