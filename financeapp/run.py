@@ -7,7 +7,10 @@ from home import home_bp
 from accounts import profiles_bp
 from accounts import user_datastore
 from accounts.utils import init_db as init_accounts_db
+from finances import finances_bp
+from finances.utils import init_db as init_finances_db
 from flask_mailman import Mail
+from flask_bootstrap import Bootstrap5
 
 load_dotenv()
 
@@ -34,13 +37,17 @@ def create_app():
 
     app.register_blueprint(home_bp, url_prefix='')
     app.register_blueprint(profiles_bp, url_prefix='/profile')
+    app.register_blueprint(finances_bp, url_prefix='/finances')
 
     db.init_app(app)
     mail = Mail(app) # noqa
     security = Security(app, user_datastore) # noqa
+    Bootstrap5(app)
 
     with app.app_context():
+        db.create_all()
         init_accounts_db()
+        init_finances_db()
 
     return app
 
