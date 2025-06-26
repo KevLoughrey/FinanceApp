@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Your Finances{% endblock %}
+
+{% block content %}
+
+<h1>Your Finances</h1>
+
+{% if expenses %}
+      {% for expense in expenses %}
+          <p>{{ expense.date }}</p>
+          <p>{{ expense.name }}</p>
+          <p>€{{ '%.2f'|format(expense.amount) }}</p>
+          <p>{{ expense.category.name }}</p>
+          <p>{{ expense.description or '-' }}</p>
+        <br>
+      {% endfor %}
+{% else %}
+    <p>No expenses found.</p>
+{% endif %}
+
+{% endblock %}
