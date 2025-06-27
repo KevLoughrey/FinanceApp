@@ -13,7 +13,7 @@
     <header>
         <nav class="navbar navbar-expand-lg bg-body-tertiary">
             <div class="container-fluid">
-                <a class="navbar-brand" href="#">Flask Finance</a>
+                <a class="navbar-brand" href="{{ url_for('home.index') }}">Flask Finance</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false"
                     aria-label="Toggle navigation">
@@ -21,9 +21,14 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                     <div class="navbar-nav ms-auto">
-                        <a class="nav-link active" aria-current="page" href="#">Lorem</a>
-                        <a class="nav-link" href="#">Ipsum</a>
-                        <a class="nav-link" href="#">Dolor</a>
+                        {% if current_user.is_authenticated %}
+                        <a class="nav-link active" aria-current="page" href="{{ url_for('finances.add_expense') }}">Add Expense</a>
+                        <a class="nav-link active" aria-current="page" href="{{ url_for('finances.my_finances') }}">View Finances</a>
+                        <a class="nav-link active" aria-current="page" href="{{ url_for('profiles.profile') }}">Profile</a>
+                        <a class="nav-link active" aria-current="page" href="{{ url_for('accounts.logout') }}">Sign Out</a>
+                        {% else %}
+                        <a class="nav-link" href="{{ url_for('accounts.login') }}">Sign In</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
