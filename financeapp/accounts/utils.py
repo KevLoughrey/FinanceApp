@@ -1,8 +1,8 @@
 import os
-from database import db
-from .models import User
+from financeapp.database import db
+from financeapp.accounts.models import User
 from flask_security.utils import hash_password
-from . import user_datastore
+from financeapp.accounts import user_datastore
 
 
 def init_db():

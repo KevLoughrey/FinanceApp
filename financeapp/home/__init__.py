@@ -1,1 +1,1 @@
-from .routes import home_bp # noqa
+from financeapp.home.routes import home_bp # noqa

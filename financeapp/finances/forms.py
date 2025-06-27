@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import (StringField, TextAreaField, DecimalField,
                      SelectField, DateField, SubmitField)
 from wtforms.validators import DataRequired, Length, NumberRange
-from .models import ExpenseCategory
+from financeapp.finances.models import ExpenseCategory
 
 
 class ExpenseForm(FlaskForm):

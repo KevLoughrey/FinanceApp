@@ -1,5 +1,5 @@
-from database import db
-from .models import ExpenseCategory
+from financeapp.database import db
+from financeapp.finances.models import ExpenseCategory
 
 
 def init_db():

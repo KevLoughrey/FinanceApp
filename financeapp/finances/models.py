@@ -1,4 +1,4 @@
-from database import db
+from financeapp.database import db
 
 
 class ExpenseCategory(db.Model):

@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, request
 from flask_security import login_required, current_user
-from .forms import ExpenseForm
-from .models import Expense, db
+from financeapp.finances.forms import ExpenseForm
+from financeapp.finances.models import Expense, db
 
 finances_bp = Blueprint('finances', __name__, template_folder='templates')
 
@@ -10,18 +10,19 @@ finances_bp = Blueprint('finances', __name__, template_folder='templates')
 @login_required
 def add_expense():
     form = ExpenseForm()
-    if form.validate_on_submit():
-        expense = Expense(
-            name=form.name.data,
-            date=form.date.data,
-            description=form.description.data,
-            amount=form.amount.data,
-            category_id=form.category.data,
-            user_id=current_user.id
-        )
-        db.session.add(expense)
-        db.session.commit()
-        return redirect(url_for('finances.my_finances'))
+    if request.method == "POST":
+        if form.validate_on_submit():
+            expense = Expense(
+                name=form.name.data,
+                date=form.date.data,
+                description=form.description.data,
+                amount=form.amount.data,
+                category_id=form.category.data,
+                user_id=current_user.id
+            )
+            db.session.add(expense)
+            db.session.commit()
+            return redirect(url_for('finances.my_finances'))
 
     context = {
         'form': form,
