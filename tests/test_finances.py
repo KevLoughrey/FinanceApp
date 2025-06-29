@@ -144,7 +144,6 @@ def test_add_expense_amount_not_a_number(client, auth, category):
         "category": category,
     }, follow_redirects=True)
     assert response.status_code == 200
-    print(response.data)
     assert b"This field is required" in response.data
 
 
