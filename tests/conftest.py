@@ -5,6 +5,7 @@ from financeapp.database import db
 from financeapp.accounts.models import User
 from financeapp.finances.models import ExpenseCategory
 from flask_security.utils import hash_password
+from datetime import datetime
 
 
 @pytest.fixture
@@ -18,17 +19,31 @@ def app():
         "SECRET_KEY": "secret",
         "SECURITY_URL_PREFIX": "/accounts",
         "SECURITY_BLUEPRINT_NAME": "accounts",
+        "SECURITY_REGISTERABLE": True,
+        "SECURITY_CONFIRMABLE": True,
+        "SECURITY_SEND_REGISTER_EMAIL": False,
+        "MAIL_SUPPRESS_SEND": True,
     })
 
     with app.app_context():
         db.create_all()
 
-        user = User(email="test@example.com",
+        user = User(email="test@test.com",
                     password=hash_password("password"),
-                    username="testuser",
                     active=True,
-                    fs_uniquifier=str(uuid.uuid4()),)
+                    fs_uniquifier=str(uuid.uuid4()),
+                    confirmed_at=datetime.now(),)
         db.session.add(user)
+
+        unconfirmed_user = User(
+            email="unconfirmed@test.com",
+            password=hash_password("password"),
+            fs_uniquifier=str(uuid.uuid4()),
+            active=True,
+            confirmed_at=None,
+        )
+        db.session.add(unconfirmed_user)
+        
         db.session.commit()
 
     yield app
@@ -48,7 +63,7 @@ class AuthActions(object):
     def __init__(self, client):
         self._client = client
 
-    def login(self, email='test@example.com', password='password'):
+    def login(self, email='test@test.com', password='password'):
         return self._client.post(
             '/accounts/login',
             data={'email': email, 'password': password},
