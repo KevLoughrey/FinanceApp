@@ -1,22 +1,52 @@
 {% extends "base.html" %}
-
 {% block title %}Your Finances{% endblock %}
 
 {% block content %}
+<h1 class="mb-4">Your Finances</h1>
 
-<h1>Your Finances</h1>
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
 
-{% if expenses %}
-      {% for expense in expenses %}
-          <p>{{ expense.date }}</p>
-          <p>{{ expense.name }}</p>
-          <p>€{{ '%.2f'|format(expense.amount) }}</p>
-          <p>{{ expense.category.name }}</p>
-          <p>{{ expense.description or '-' }}</p>
-        <br>
-      {% endfor %}
-{% else %}
-    <p>No expenses found.</p>
-{% endif %}
+      {% if expenses %}
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-light fw-bold">
+            <div class="row text-center">
+              <div class="col-2">Date</div>
+              <div class="col-2">Name</div>
+              <div class="col-2">Amount</div>
+              <div class="col-2">Category</div>
+              <div class="col-3">Description</div>
+              <div class="col-1">Edit</div>
+            </div>
+          </div>
+        </div>
 
+        {% for expense in expenses %}
+          <div class="card shadow-sm mb-3" id="expense-{{ expense.id }}">
+            <div class="card-body p-3">
+
+              <div class="expense-display row text-center align-items-center">
+                <div class="col-2"><strong>{{ expense.date }}</strong></div>
+                <div class="col-2">{{ expense.name }}</div>
+                <div class="col-2">€{{ '%.2f'|format(expense.amount) }}</div>
+                <div class="col-2">{{ expense.category.name }}</div>
+                <div class="col-3">{{ expense.description or '-' }}</div>
+                <div class="col-1 text-end">
+                  <button class="btn btn-sm btn-outline-primary edit-btn" data-id="{{ expense.id }}">✎</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        {% endfor %}
+
+      {% else %}
+        <p>No expenses found.</p>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
 {% endblock %}
+
