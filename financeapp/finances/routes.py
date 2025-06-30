@@ -1,7 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, request
+from flask import (Blueprint, render_template, redirect,
+                   url_for, request, jsonify)
 from flask_security import login_required, current_user
 from financeapp.finances.forms import ExpenseForm
-from financeapp.finances.models import Expense, db
+from financeapp.finances.models import Expense, ExpenseCategory
+from financeapp.database import db
+
 
 finances_bp = Blueprint('finances', __name__, template_folder='templates')
 
@@ -40,9 +43,49 @@ def my_finances():
         .order_by(Expense.date.desc())
         .all()
     )
+    categories = ExpenseCategory.query.order_by(ExpenseCategory.name).all()
 
     context = {
         'expenses': expenses,
+        'expense_categories': categories,
     }
 
     return render_template("finances/my_finances.html", **context)
+
+
+@finances_bp.route("/edit_expense/<int:id>", methods=["POST"])
+@login_required
+def edit_expense(id):
+    expense = Expense.query.filter_by(id=id,
+                                      user_id=current_user.id).first_or_404()
+    data = request.get_json()
+
+    form = ExpenseForm(data=data, meta={'csrf': False})
+
+    form.category.choices = [
+        (c.id, c.name) for c in ExpenseCategory.query.order_by('name').all()]
+
+    if form.validate():
+        expense.name = form.name.data
+        expense.date = form.date.data
+        expense.description = form.description.data
+        expense.amount = form.amount.data
+        expense.category_id = form.category.data
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "expense": {
+                "id": expense.id,
+                "name": expense.name,
+                "date": expense.date.strftime('%Y-%m-%d'),
+                "description": expense.description or '',
+                "amount": str(expense.amount),
+                "category_id": expense.category_id,
+                "category_name": expense.category.name
+            }
+        })
+
+    else:
+        return jsonify({"success": False, "errors": form.errors}), 400
