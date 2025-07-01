@@ -35,6 +35,13 @@ def app():
                     confirmed_at=datetime.now(),)
         db.session.add(user)
 
+        another_user = User(email="second@test.com",
+                            password=hash_password("password"),
+                            active=True,
+                            fs_uniquifier=str(uuid.uuid4()),
+                            confirmed_at=datetime.now(),)
+        db.session.add(another_user)
+
         unconfirmed_user = User(
             email="unconfirmed@test.com",
             password=hash_password("password"),
