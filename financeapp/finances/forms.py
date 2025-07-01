@@ -15,7 +15,7 @@ class ExpenseForm(FlaskForm):
         rounding=None,
         validators=[
             DataRequired(),
-            NumberRange(min=0, message="Amount must be a positive number.")
+            NumberRange(min=0.01, message="Amount must be a positive number.")
         ]
     )
     category = SelectField('Category', coerce=int, validators=[DataRequired()])

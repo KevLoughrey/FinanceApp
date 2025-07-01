@@ -3,19 +3,10 @@ from financeapp.accounts.models import User
 from financeapp.finances.utils import init_db
 from datetime import date
 from decimal import Decimal
+import json
 
 
-def test_db_create_expense_category(db_session):
-    category = ExpenseCategory(name="Rent")
-    db_session.add(category)
-    db_session.commit()
-
-    assert category.id is not None
-    assert str(category) == "Rent"
-
-
-def test_db_create_expense(db_session):
-    user = User.query.filter_by(email="test@test.com").first()
+def create_expense(db_session, user):
     category = ExpenseCategory(name="Mortgage")
     db_session.add(category)
     db_session.commit()
@@ -30,6 +21,21 @@ def test_db_create_expense(db_session):
     )
     db_session.add(expense)
     db_session.commit()
+    return expense
+
+
+def test_db_create_expense_category(db_session):
+    category = ExpenseCategory(name="Rent")
+    db_session.add(category)
+    db_session.commit()
+
+    assert category.id is not None
+    assert str(category) == "Rent"
+
+
+def test_db_create_expense(db_session):
+    user = User.query.filter_by(email="test@test.com").first()
+    expense = create_expense(db_session, user)
 
     assert expense.id is not None
     assert expense.name == "Mortgage Payment"
@@ -58,8 +64,7 @@ def test_finance_init_db_does_not_duplicate(app, db_session):
 
 
 def test_add_expense_requires_login(client, auth):
-    response = client.get("/finances/add_expense")
-    assert response.status_code == 302
+    response = client.get("/finances/add_expense", follow_redirects=True)
     assert b"login" in response.data
 
 
@@ -147,9 +152,8 @@ def test_add_expense_amount_not_a_number(client, auth, category):
     assert b"This field is required" in response.data
 
 
-def test_my_finances_requires_login(client, auth):
-    response = client.get("/finances/my_finances")
-    assert response.status_code == 302
+def test_my_finances_requires_login(client):
+    response = client.get("/finances/my_finances",  follow_redirects=True)
     assert b"login" in response.data
 
 
@@ -158,3 +162,145 @@ def test_my_finances_get(client, auth):
     response = client.get("/finances/my_finances")
     assert response.status_code == 200
     assert b"my_finances" in response.data
+
+
+def test_edit_expense_success(client, auth, db_session, category):
+    auth.login()
+    user = User.query.filter_by(email="test@test.com").first()
+    expense = create_expense(db_session, user)
+
+    data = {
+        "name": "Updated Name",
+        "date": "1999-07-01",
+        "description": "Updated description",
+        "amount": 999.99,
+        "category": category,
+    }
+    response = client.post(f"/finances/edit_expense/{expense.id}",
+                           data=json.dumps(data),
+                           content_type="application/json")
+
+    assert response.status_code == 200
+    result = response.get_json()
+    assert result["success"]
+    assert result["expense"]["name"] == "Updated Name"
+    assert result["expense"]["description"] == "Updated description"
+    assert result["expense"]["date"] == "1999-07-01"
+    assert result["expense"]["amount"] == "999.99"
+    assert result["expense"]["category_id"] == 1
+
+
+def test_edit_expense_invalid_category(client, auth, db_session):
+    auth.login()
+    user = User.query.filter_by(email="test@test.com").first()
+    expense = create_expense(db_session, user)
+
+    data = {
+        "name": "Bad Category",
+        "date": "2025-07-01",
+        "description": "Invalid category",
+        "amount": 50.00,
+        "category": 1000,
+    }
+    response = client.post(f"/finances/edit_expense/{expense.id}",
+                           data=json.dumps(data),
+                           content_type="application/json")
+
+    assert not response.get_json()["success"]
+    assert "category" in response.get_json()["errors"]
+
+
+def test_edit_expense_negative_amount(client, auth, db_session, category):
+    auth.login()
+    user = User.query.filter_by(email="test@test.com").first()
+    expense = create_expense(db_session, user)
+
+    data = {
+        "name": "Bad Amount",
+        "date": "2025-07-01",
+        "description": "Negative",
+        "amount": -50.00,
+        "category": category,
+    }
+    response = client.post(f"/finances/edit_expense/{expense.id}",
+                           data=json.dumps(data),
+                           content_type="application/json")
+
+    assert not response.get_json()["success"]
+    assert "amount" in response.get_json()["errors"]
+
+
+def test_edit_expense_invalid_date(client, auth, db_session, category):
+    auth.login()
+    user = User.query.filter_by(email="test@test.com").first()
+    expense = create_expense(db_session, user)
+
+    data = {
+        "name": "Bad Date",
+        "date": "not-a-date",
+        "description": "error",
+        "amount": 10.00,
+        "category": category,
+    }
+    response = client.post(f"/finances/edit_expense/{expense.id}",
+                           data=json.dumps(data),
+                           content_type="application/json")
+
+    assert not response.get_json()["success"]
+    assert "date" in response.get_json()["errors"]
+
+
+def test_edit_expense_missing_fields(client, auth, db_session):
+    auth.login()
+    user = User.query.filter_by(email="test@test.com").first()
+    expense = create_expense(db_session, user)
+
+    response = client.post(f"/finances/edit_expense/{expense.id}",
+                           data=json.dumps({}),
+                           content_type="application/json")
+
+    assert not response.get_json()["success"]
+    assert "name" in response.get_json()["errors"]
+    assert "date" in response.get_json()["errors"]
+
+
+def test_edit_expense_other_user_forbidden(client, auth, db_session, category):
+    auth.login()
+    other_user = User.query.filter_by(email="second@test.com").first()
+    expense = create_expense(db_session, other_user)
+
+    data = {
+        "name": "bad actor",
+        "date": "2025-01-01",
+        "amount": 10.0,
+        "category": category,
+    }
+    response = client.post(f"/finances/edit_expense/{expense.id}",
+                           data=json.dumps(data),
+                           content_type="application/json")
+
+    assert response.status_code == 404
+
+
+def test_edit_expense_not_found(client, auth):
+    auth.login()
+    data = json.dumps({
+                        "name": "Test",
+                        "date": "2025-01-01",
+                        "amount": 10,
+                        "category": 1,
+                    })
+    response = client.post("/finances/edit_expense/9999",
+                           data=data,
+                           content_type="application/json")
+    assert response.status_code == 404
+
+
+def test_edit_expense_requires_post(client):
+    response = client.get("/finances/edit_expense/1", follow_redirects=True)
+    assert response.status_code == 405
+
+
+def test_edit_expense_requires_login(client):
+    response = client.post("/finances/edit_expense/1", follow_redirects=True)
+    assert b"login" in response.data
