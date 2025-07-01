@@ -92,3 +92,13 @@ def edit_expense(id):
 
     else:
         return jsonify({"success": False, "errors": form.errors})
+
+
+@finances_bp.route("/delete_expense/<int:id>", methods=["DELETE"])
+@login_required
+def delete_expense(id):
+    expense = Expense.query.filter_by(id=id,
+                                      user_id=current_user.id).first_or_404()
+    db.session.delete(expense)
+    db.session.commit()
+    return jsonify({"success": True})
