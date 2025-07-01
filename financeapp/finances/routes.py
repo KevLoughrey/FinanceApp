@@ -60,6 +60,9 @@ def edit_expense(id):
                                       user_id=current_user.id).first_or_404()
     data = request.get_json()
 
+    for key, value in data.items():
+        if value is None:
+            data[key] = ''
     form = ExpenseForm(data=data, meta={'csrf': False})
 
     form.category.choices = [
@@ -88,4 +91,4 @@ def edit_expense(id):
         })
 
     else:
-        return jsonify({"success": False, "errors": form.errors}), 400
+        return jsonify({"success": False, "errors": form.errors})
