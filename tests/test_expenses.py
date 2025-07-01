@@ -264,7 +264,8 @@ def test_edit_expense_missing_fields(client, auth, db_session):
     assert "date" in response.get_json()["errors"]
 
 
-def test_edit_expense_other_user_forbidden(client, auth, db_session, category):
+def test_edit_expense_other_user_forbidden(client, auth,
+                                           db_session, category):
     auth.login()
     other_user = User.query.filter_by(email="second@test.com").first()
     expense = create_expense(db_session, other_user)
@@ -304,3 +305,46 @@ def test_edit_expense_requires_post(client):
 def test_edit_expense_requires_login(client):
     response = client.post("/finances/edit_expense/1", follow_redirects=True)
     assert b"login" in response.data
+
+
+def test_delete_expense_success(client, auth, app, db_session, category):
+    auth.login()
+    user = User.query.filter_by(email="test@test.com").first()
+    expense = create_expense(db_session, user)
+
+    response = client.delete(f"/finances/delete_expense/{expense.id}")
+    assert response.status_code == 200
+    assert response.get_json()["success"]
+
+    with app.app_context():
+        assert db_session.get(Expense, expense.id) is None
+
+
+def test_delete_expense_requires_login(client):
+    response = client.delete("/finances/delete_expense/1",
+                             follow_redirects=True)
+    assert b"login" in response.data
+
+
+def test_delete_expense_other_user_forbidden(client, auth, db_session):
+    auth.login()
+    other_user = User.query.filter_by(email="second@test.com").first()
+    expense = create_expense(db_session, other_user)
+
+    response = client.delete(f"/finances/delete_expense/{expense.id}")
+    assert response.status_code == 404
+
+
+def test_delete_expense_not_found(client, auth):
+    auth.login()
+    response = client.delete("/finances/delete_expense/99999")
+    assert response.status_code == 404
+
+
+def test_delete_expense_requires_delete(client):
+    response = client.get("/finances/delete_expense/1",
+                          follow_redirects=True)
+    assert response.status_code == 405
+    response = client.post("/finances/delete_expense/1",
+                           follow_redirects=True)
+    assert response.status_code == 405
