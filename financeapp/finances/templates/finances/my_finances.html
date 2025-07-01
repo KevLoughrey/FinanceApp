@@ -4,59 +4,51 @@
 <div class="container">
     <h1>Your Finances</h1>
     {% if expenses %}
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Name</th>
-                <th>Amount</th>
-                <th>Category</th>
-                <th>Description</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for expense in expenses %}
-            <tr id="expense-row-{{ expense.id }}">
-                <td class="date">{{ expense.date }}</td>
-                <td class="name">{{ expense.name }}</td>
-                <td class="amount">€{{ '%.2f'|format(expense.amount) }}</td>
-                <td class="category">{{ expense.category.name }}</td>
-                <td class="description">{{ expense.description or '-' }}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary edit-btn" data-id="{{ expense.id }}">✎</button>
-                </td>
-            </tr>
-            <tr id="expense-edit-{{ expense.id }}" class="d-none">
-                <form class="expense-edit-form" data-id="{{ expense.id }}">
-                    <td>
-                        <input type="date" name="date" value="{{ expense.date }}" class="form-control form-control-sm">
-                    </td>
-                    <td>
-                        <input type="text" name="name" value="{{ expense.name }}" class="form-control form-control-sm">
-                    </td>
-                    <td>
-                        <input type="number" name="amount" value="{{ expense.amount }}" step="0.01" class="form-control form-control-sm">
-                    </td>
-                    <td>
-                        <select name="category" class="form-select form-select-sm" style="min-width: 130px;">
-                        {% for cat in expense_categories %}
-                            <option value="{{ cat.id }}" {% if cat.id == expense.category_id %}selected{% endif %}>{{ cat.name }}</option>
-                        {% endfor %}
-                        </select>
-                    </td>
-                    <td>
-                        <input type="text" name="description" value="{{ expense.description }}" class="form-control form-control-sm">
-                    </td>
-                    <td>
-                        <button type="submit" class="btn btn-sm btn-primary">Save</button>
-                        <button type="button" class="btn btn-sm btn-secondary cancel-btn" data-id="{{ expense.id }}">Cancel</button>
-                    </td>
-                </form>
-            </tr>
+    <div class="row fw-bold border-bottom pb-2">
+        <div class="col-md-2">Date</div>
+        <div class="col-md-2">Name</div>
+        <div class="col-md-2">Amount</div>
+        <div class="col-md-2">Category</div>
+        <div class="col-md-3">Description</div>
+        <div class="col-md-1">Actions</div>
+    </div>
+    {% for expense in expenses %}
+    <div class="row py-2 align-items-center" id="expense-row-{{ expense.id }}">
+        <div class="col-md-2 date">{{ expense.date }}</div>
+        <div class="col-md-2 name">{{ expense.name }}</div>
+        <div class="col-md-2 amount">€{{ '%.2f'|format(expense.amount) }}</div>
+        <div class="col-md-2 category">{{ expense.category.name }}</div>
+        <div class="col-md-3 description">{{ expense.description or '-' }}</div>
+        <div class="col-md-1">
+            <button class="btn btn-sm btn-outline-primary edit-btn" data-id="{{ expense.id }}">✎</button>
+        </div>
+    </div>
+    <form class="row g-2 align-items-center d-none expense-edit-form border-top pt-2 pb-2" id="expense-edit-{{ expense.id }}" data-id="{{ expense.id }}">
+        <div class="col-md-2">
+            <input type="date" name="date" value="{{ expense.date }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-2">
+            <input type="text" name="name" value="{{ expense.name }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-2">
+            <input type="number" name="amount" value="{{ expense.amount }}" step="0.01" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-2">
+            <select name="category" class="form-select form-select-sm">
+            {% for cat in expense_categories %}
+            <option value="{{ cat.id }}" {% if cat.id == expense.category_id %}selected{% endif %}>{{ cat.name }}</option>
             {% endfor %}
-        </tbody>
-    </table>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <input type="text" name="description" value="{{ expense.description }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-1 d-flex gap-1">
+            <button type="submit" class="btn btn-sm btn-primary">✓</button>
+            <button type="button" class="btn btn-sm btn-secondary cancel-btn" data-id="{{ expense.id }}">✗</button>
+        </div>
+    </form>
+    {% endfor %}
     {% else %}
     <p>No expenses found.</p>
     {% endif %}
