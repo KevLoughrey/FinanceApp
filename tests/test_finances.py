@@ -5,17 +5,7 @@ from datetime import date
 from decimal import Decimal
 
 
-def test_db_create_expense_category(db_session):
-    category = ExpenseCategory(name="Rent")
-    db_session.add(category)
-    db_session.commit()
-
-    assert category.id is not None
-    assert str(category) == "Rent"
-
-
-def test_db_create_expense(db_session):
-    user = User.query.filter_by(email="test@test.com").first()
+def create_expense(db_session, user):
     category = ExpenseCategory(name="Mortgage")
     db_session.add(category)
     db_session.commit()
@@ -30,6 +20,22 @@ def test_db_create_expense(db_session):
     )
     db_session.add(expense)
     db_session.commit()
+    return expense
+
+
+def test_db_create_expense_category(db_session):
+    category = ExpenseCategory(name="Rent")
+    db_session.add(category)
+    db_session.commit()
+
+    assert category.id is not None
+    assert str(category) == "Rent"
+
+
+def test_db_create_expense(db_session):
+    user = User.query.filter_by(email="test@test.com").first()
+
+    expense = create_expense(db_session, user)
 
     assert expense.id is not None
     assert expense.name == "Mortgage Payment"
