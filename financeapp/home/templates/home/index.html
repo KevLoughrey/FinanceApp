@@ -1,7 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}Homepage{% endblock %}
+{% block title %}Welcome to Flask Finance{% endblock %}
+
+{% block additional_style %}
+<style>
+    body {
+    background: 
+        url('/static/images/background.jpg') no-repeat center center fixed;
+        background-size: contain;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-    <h1>Welcome to Flask Finance!</h1>
+<div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
+    <div class="text-center d-block me-auto ms-5">
+        <h1>Welcome to Flask Finance!</h1>
+        <h2>The easiest way to track your finances</h2>
+    </div>
+</div>
 {% endblock %}

@@ -11,6 +11,10 @@
         <link href="https://fonts.googleapis.com/css2?family=Alatsi&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=finance_chip" />
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+        {% block additional_style %}
+        {% endblock %}
+
     </head>
     <body class="d-flex flex-column min-vh-100">
         <header>
