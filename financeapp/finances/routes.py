@@ -5,7 +5,9 @@ from financeapp.finances.forms import ExpenseForm, IncomeForm
 from financeapp.finances.models import (Expense, ExpenseCategory,
                                         Income, IncomeCategory)
 from financeapp.database import db
-from sqlalchemy import func
+from financeapp.finances.utils import (get_category_totals,
+                                       get_monthly_totals,
+                                       get_monthly_chart_data)
 
 
 finances_bp = Blueprint('finances', __name__, template_folder='templates')
@@ -39,98 +41,29 @@ def add_expense():
 @finances_bp.route("/dashboard")
 @login_required
 def dashboard():
-    expenses = (
-        Expense.query
-        .filter_by(user_id=current_user.id)
-        .order_by(Expense.date.desc())
-        .all()
-    )
-    expense_categories = ExpenseCategory.query.order_by(
-        ExpenseCategory.name).all()
-
-    incomes = (
-        Income.query
-        .filter_by(user_id=current_user.id)
-        .order_by(Income.date.desc())
-        .all()
-    )
-    income_categories = IncomeCategory.query.order_by(
-        IncomeCategory.name).all()
-
-    expense_totals = (
-        db.session.query(ExpenseCategory.name, func.sum(Expense.amount))
-        .join(Expense)
-        .filter(Expense.user_id == current_user.id)
-        .group_by(ExpenseCategory.name)
-        .all()
-    )
-    income_totals = (
-        db.session.query(IncomeCategory.name, func.sum(Income.amount))
-        .join(Income)
-        .filter(Income.user_id == current_user.id)
-        .group_by(IncomeCategory.name)
-        .all()
-    )
-
-    expense_monthly = (
-        db.session.query(
-            func.date_trunc('month', Expense.date).label('month'),
-            func.sum(Expense.amount)
-        )
-        .filter(Expense.user_id == current_user.id)
-        .group_by('month')
-        .order_by('month')
-        .all()
-    )
-
-    income_monthly = (
-        db.session.query(
-            func.date_trunc('month', Income.date).label('month'),
-            func.sum(Income.amount)
-        )
-        .filter(Income.user_id == current_user.id)
-        .group_by('month')
-        .order_by('month')
-        .all()
-    )
-
-    def to_month_dict(rows):
-        return {
-            row[0].strftime('%Y-%m'): float(row[1]) for row in rows
-        }
-
-    # Get all months (as raw datetime.date objects)
-    all_months = sorted(set(
-        row[0] for row in expense_monthly + income_monthly))
-
-    # Convert to "Month YYYY" labels
-    month_labels = [m.strftime('%B %Y') for m in all_months]
-
-    expense_dict = {
-        m.strftime('%B %Y'): float(v)
-        for m, v in expense_monthly
-    }
-
-    income_dict = {
-        m.strftime('%B %Y'): float(v)
-        for m, v in income_monthly
-    }
-
-    monthly_data = {
-        'months': month_labels,
-        'expenses': [expense_dict.get(m, 0) for m in month_labels],
-        'income': [income_dict.get(m, 0) for m in month_labels],
-    }
+    user_id = current_user.id
 
     context = {
-        'expenses': expenses,
-        'expense_categories': expense_categories,
-        'incomes': incomes,
-        'income_categories': income_categories,
-        'expense_data': expense_totals,
-        'income_data': income_totals,
-        'monthly_data': monthly_data,
+        'expenses':
+            Expense.query.filter_by(user_id=user_id)
+            .order_by(Expense.date.desc()).all(),
+        'expense_categories':
+            ExpenseCategory.query
+            .order_by(ExpenseCategory.name).all(),
+        'incomes': 
+            Income.query.filter_by(user_id=user_id)
+            .order_by(Income.date.desc()).all(),
+        'income_categories':
+            IncomeCategory.query
+            .order_by(IncomeCategory.name).all(),
+        'expense_data': get_category_totals(Expense, ExpenseCategory, user_id),
+        'income_data': get_category_totals(Income, IncomeCategory, user_id),
     }
+
+    expense_monthly = get_monthly_totals(Expense, user_id)
+    income_monthly = get_monthly_totals(Income, user_id)
+    context['monthly_data'] = get_monthly_chart_data(expense_monthly,
+                                                     income_monthly)
 
     return render_template("finances/dashboard.html", **context)
 
