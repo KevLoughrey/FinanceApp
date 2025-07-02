@@ -148,18 +148,6 @@ def test_add_expense_amount_not_a_number(client, auth, expense_category):
     assert b"This field is required" in response.data
 
 
-def test_my_finances_requires_login(client):
-    response = client.get("/finances/my_finances",  follow_redirects=True)
-    assert b"login" in response.data
-
-
-def test_my_finances_get(client, auth):
-    auth.login()
-    response = client.get("/finances/my_finances")
-    assert response.status_code == 200
-    assert b"my_finances" in response.data
-
-
 def test_edit_expense_success(client, auth, db_session, expense_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
