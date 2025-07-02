@@ -44,11 +44,23 @@ def my_finances():
         .order_by(Expense.date.desc())
         .all()
     )
-    categories = ExpenseCategory.query.order_by(ExpenseCategory.name).all()
+    expense_categories = ExpenseCategory.query.order_by(
+        ExpenseCategory.name).all()
+
+    incomes = (
+        Income.query
+        .filter_by(user_id=current_user.id)
+        .order_by(Income.date.desc())
+        .all()
+    )
+    income_categories = IncomeCategory.query.order_by(
+        IncomeCategory.name).all()
 
     context = {
         'expenses': expenses,
-        'expense_categories': categories,
+        'expense_categories': expense_categories,
+        'incomes': incomes,
+        'income_categories': income_categories,
     }
 
     return render_template("finances/my_finances.html", **context)
