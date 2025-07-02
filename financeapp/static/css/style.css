@@ -1,0 +1,26 @@
+:root {
+    --aqua: #2EC4B6;
+    --lightaqua: #CBF3F0;
+    --white: #f3f3f1;
+    --lightorange: #FFBF69;
+    --orange: #FF9F1C;
+}
+
+body {
+  font-family: "Alatsi", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  background-color: var(--white);
+}
+
+.xxl-font {
+    font-size: 50px;
+}
+
+.navbar {
+    background-color: var(--aqua) !important;
+}
+
+footer {
+    background-color: var(--aqua);
+}
