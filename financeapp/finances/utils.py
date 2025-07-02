@@ -1,6 +1,7 @@
 from financeapp.database import db
 from financeapp.finances.models import ExpenseCategory, IncomeCategory
-from sqlalchemy import func
+from sqlalchemy import func, extract
+from datetime import datetime
 
 
 def init_db():
@@ -37,8 +38,9 @@ def get_category_totals(model, category_model, user_id,
 
 def get_monthly_totals(model, user_id, start_date=None, end_date=None):
     query = db.session.query(
-        func.date_trunc('month', model.date).label('month'),
-        func.sum(model.amount)
+        extract('year', model.date).label('year'),
+        extract('month', model.date).label('month'),
+        func.sum(model.amount).label('total')
     ).filter(model.user_id == user_id)
 
     if start_date:
@@ -46,24 +48,31 @@ def get_monthly_totals(model, user_id, start_date=None, end_date=None):
     if end_date:
         query = query.filter(model.date <= end_date)
 
-    return query.group_by('month').order_by('month').all()
+    query = query.group_by('year', 'month').order_by('year', 'month')
+
+    return query.all()
 
 
 def get_monthly_chart_data(expense_monthly, income_monthly):
     all_months = sorted(
-        set(row[0] for row in expense_monthly + income_monthly)
+        set((row[0], row[1]) for row in expense_monthly + income_monthly)
     )
-    month_labels = [m.strftime('%B %Y') for m in all_months]
 
-    expense_dict = {
-        m.strftime('%B %Y'): float(v) for m, v in expense_monthly
-    }
-    income_dict = {
-        m.strftime('%B %Y'): float(v) for m, v in income_monthly
-    }
+    month_labels = [
+        datetime(int(year), int(month), 1).strftime('%B %Y') 
+        for year, month in all_months
+    ]
+
+    expense_dict = {(row[0], row[1]): float(row[2]) for row in expense_monthly}
+    income_dict = {(row[0], row[1]): float(row[2]) for row in income_monthly}
+
+    expense_totals = [
+        expense_dict.get((year, month), 0) for year, month in all_months]
+    income_totals = [
+        income_dict.get((year, month), 0) for year, month in all_months]
 
     return {
         'months': month_labels,
-        'expenses': [expense_dict.get(m, 0) for m in month_labels],
-        'income': [income_dict.get(m, 0) for m in month_labels],
+        'expenses': expense_totals,
+        'income': income_totals,
     }
