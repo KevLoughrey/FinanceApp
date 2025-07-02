@@ -5,6 +5,7 @@ from financeapp.finances.forms import ExpenseForm, IncomeForm
 from financeapp.finances.models import (Expense, ExpenseCategory,
                                         Income, IncomeCategory)
 from financeapp.database import db
+from sqlalchemy import func
 
 
 finances_bp = Blueprint('finances', __name__, template_folder='templates')
@@ -56,11 +57,28 @@ def dashboard():
     income_categories = IncomeCategory.query.order_by(
         IncomeCategory.name).all()
 
+    expense_totals = (
+        db.session.query(ExpenseCategory.name, func.sum(Expense.amount))
+        .join(Expense)
+        .filter(Expense.user_id == current_user.id)
+        .group_by(ExpenseCategory.name)
+        .all()
+    )
+    income_totals = (
+        db.session.query(IncomeCategory.name, func.sum(Income.amount))
+        .join(Income)
+        .filter(Income.user_id == current_user.id)
+        .group_by(IncomeCategory.name)
+        .all()
+    )
+
     context = {
         'expenses': expenses,
         'expense_categories': expense_categories,
         'incomes': incomes,
         'income_categories': income_categories,
+        'expense_data': expense_totals,
+        'income_data': income_totals,
     }
 
     return render_template("finances/dashboard.html", **context)
