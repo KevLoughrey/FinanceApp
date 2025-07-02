@@ -1,24 +1,39 @@
 document.addEventListener('DOMContentLoaded', () => {
+    function toggleEditForm(type, id, showEdit) {
+        const row = document.getElementById(`${type}-row-${id}`);
+        const form = document.getElementById(`${type}-edit-${id}`);
+        if (row && form) {
+            if (showEdit) {
+                row.classList.add('d-none');
+                form.classList.remove('d-none');
+            } else {
+                form.classList.add('d-none');
+                row.classList.remove('d-none');
+            }
+        }
+    }
+
     document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = btn.dataset.id;
-            document.getElementById(`expense-row-${id}`).classList.add('d-none');
-            document.getElementById(`expense-edit-${id}`).classList.remove('d-none');
+            const type = btn.dataset.type;
+            toggleEditForm(type, id, true);
         });
     });
 
     document.querySelectorAll('.cancel-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = btn.dataset.id;
-            document.getElementById(`expense-edit-${id}`).classList.add('d-none');
-            document.getElementById(`expense-row-${id}`).classList.remove('d-none');
+            const type = btn.dataset.type;
+            toggleEditForm(type, id, false);
         });
     });
 
-    document.querySelectorAll('.expense-edit-form').forEach(form => {
+    document.querySelectorAll('.expense-edit-form, .income-edit-form').forEach(form => {
         form.addEventListener('submit', e => {
             e.preventDefault();
             const id = form.dataset.id;
+            const type = form.dataset.type;
 
             form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 
@@ -26,26 +41,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = Object.fromEntries(formData.entries());
             data.amount = parseFloat(data.amount);
 
-            fetch(`/finances/edit_expense/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data),
-                })
+            fetch(`/finances/edit_${type}/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data),
+            })
             .then(res => res.json())
             .then(response => {
                 if (response.success) {
-                    const r = response.expense;
-                    const row = document.getElementById(`expense-row-${id}`);
+                    const r = response[type];
+                    const row = document.getElementById(`${type}-row-${id}`);
                     row.querySelector('.date').textContent = r.date;
                     row.querySelector('.name').textContent = r.name;
                     row.querySelector('.amount').textContent = `€${Number.parseFloat(r.amount).toFixed(2)}`;
                     row.querySelector('.category').textContent = r.category_name;
-                    row.querySelector('.description').textContent = r.description;
+                    row.querySelector('.description').textContent = r.description || '-';
 
-                    form.classList.add('d-none');
-                    row.classList.remove('d-none');
+                    toggleEditForm(type, id, false);
                 } else if (response.errors) {
                     for (const [field, messages] of Object.entries(response.errors)) {
                         const input = form.querySelector(`[name="${field}"]`);
@@ -55,35 +69,39 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
-    let expenseIdToDelete = null;
+
+    let itemIdToDelete = null;
+    let itemTypeToDelete = null;
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            expenseIdToDelete = btn.dataset.id;
+            itemIdToDelete = btn.dataset.id;
+            itemTypeToDelete = btn.dataset.type;
+
             const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
             modal.show();
         });
     });
 
     document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-        if (!expenseIdToDelete) return;
+        if (!itemIdToDelete || !itemTypeToDelete) return;
 
-        fetch(`/finances/delete_expense/${expenseIdToDelete}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
+        fetch(`/finances/delete_${itemTypeToDelete}/${itemIdToDelete}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
         .then(response => {
             if (response.ok) {
-                document.getElementById(`expense-row-${expenseIdToDelete}`)?.remove();
-                document.getElementById(`expense-edit-${expenseIdToDelete}`)?.remove();
+                document.getElementById(`${itemTypeToDelete}-row-${itemIdToDelete}`)?.remove();
+                document.getElementById(`${itemTypeToDelete}-edit-${itemIdToDelete}`)?.remove();
             } else {
-                // TODO: Better error handling here...
-                alert('Failed to delete expense.');
+                alert(`Failed to delete ${itemTypeToDelete}.`);
             }
             bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
-            expenseIdToDelete = null;
+            itemIdToDelete = null;
+            itemTypeToDelete = null;
         });
     });
 });
