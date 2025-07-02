@@ -19,14 +19,20 @@ def init_db():
     db.session.commit()
 
 
-def get_category_totals(model, category_model, user_id):
-    return (
+def get_category_totals(model, category_model, user_id,
+                        start_date=None, end_date=None):
+    query = (
         db.session.query(category_model.name, func.sum(model.amount))
         .join(category_model)
         .filter(model.user_id == user_id)
-        .group_by(category_model.name)
-        .all()
     )
+
+    if start_date:
+        query = query.filter(model.date >= start_date)
+    if end_date:
+        query = query.filter(model.date <= end_date)
+
+    return query.group_by(category_model.name).all()
 
 
 def get_monthly_totals(model, user_id, start_date=None, end_date=None):
