@@ -32,20 +32,19 @@ const incomeChart = new Chart(document.getElementById('incomeChart'), {
 });
 
 const compChart = new Chart(document.getElementById('compChart'), {
-    type: 'line',
+    type: 'bar',
     data: {
         labels: monthlyLabels,
-        datasets: [{
+        datasets: [
+            {
                 label: 'Expenses',
                 data: monthlyExpenses,
-                borderColor: '#e74c3c',
-                tension: 0.3
+                backgroundColor: '#e74c3c'
             },
             {
                 label: 'Income',
                 data: monthlyIncome,
-                borderColor: '#2ecc71',
-                tension: 0.3
+                backgroundColor: '#2ecc71'
             }
         ]
     },
@@ -77,11 +76,13 @@ const compChart = new Chart(document.getElementById('compChart'), {
                 title: {
                     display: true,
                     text: 'Month'
-                }
+                },
+                stacked: false,
             }
         }
     }
 });
+
 
 document.getElementById("filterCharts").addEventListener("click", () => {
     const start = document.getElementById("startMonth").value;
