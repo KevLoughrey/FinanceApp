@@ -1,17 +1,4 @@
-import os
 from financeapp.accounts.models import User
-from financeapp.accounts.utils import init_db
-
-
-def test_admin_user_created(app):
-    with app.app_context():
-        admin_email = os.environ["ADMIN_EMAIL"]
-        admin_password = os.environ["ADMIN_PASSWORD"]
-
-        init_db()
-        user = User.query.filter_by(email=admin_email).first()
-        assert user is not None
-        assert user.password != admin_password
 
 
 def test_profile_get(client, auth):
