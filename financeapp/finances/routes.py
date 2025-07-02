@@ -1,8 +1,9 @@
 from flask import (Blueprint, render_template, redirect,
                    url_for, request, jsonify)
 from flask_security import login_required, current_user
-from financeapp.finances.forms import ExpenseForm
-from financeapp.finances.models import Expense, ExpenseCategory
+from financeapp.finances.forms import ExpenseForm, IncomeForm
+from financeapp.finances.models import (Expense, ExpenseCategory,
+                                        Income, IncomeCategory)
 from financeapp.database import db
 
 
@@ -43,11 +44,23 @@ def my_finances():
         .order_by(Expense.date.desc())
         .all()
     )
-    categories = ExpenseCategory.query.order_by(ExpenseCategory.name).all()
+    expense_categories = ExpenseCategory.query.order_by(
+        ExpenseCategory.name).all()
+
+    incomes = (
+        Income.query
+        .filter_by(user_id=current_user.id)
+        .order_by(Income.date.desc())
+        .all()
+    )
+    income_categories = IncomeCategory.query.order_by(
+        IncomeCategory.name).all()
 
     context = {
         'expenses': expenses,
-        'expense_categories': categories,
+        'expense_categories': expense_categories,
+        'incomes': incomes,
+        'income_categories': income_categories,
     }
 
     return render_template("finances/my_finances.html", **context)
@@ -102,3 +115,28 @@ def delete_expense(id):
     db.session.delete(expense)
     db.session.commit()
     return jsonify({"success": True})
+
+
+@finances_bp.route('/add_income', methods=['GET', 'POST'])
+@login_required
+def add_income():
+    form = IncomeForm()
+    if request.method == "POST":
+        if form.validate_on_submit():
+            income = Income(
+                name=form.name.data,
+                date=form.date.data,
+                description=form.description.data,
+                amount=form.amount.data,
+                category_id=form.category.data,
+                user_id=current_user.id
+            )
+            db.session.add(income)
+            db.session.commit()
+            return redirect(url_for('finances.my_finances'))
+
+    context = {
+        'form': form,
+    }
+
+    return render_template('finances/add_income.html', **context)

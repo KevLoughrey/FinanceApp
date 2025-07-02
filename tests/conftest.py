@@ -3,7 +3,7 @@ import uuid
 from financeapp.run import create_app
 from financeapp.database import db
 from financeapp.accounts.models import User
-from financeapp.finances.models import ExpenseCategory
+from financeapp.finances.models import ExpenseCategory, IncomeCategory
 from flask_security.utils import hash_password
 from datetime import datetime
 
@@ -93,9 +93,19 @@ def db_session(app):
 
 
 @pytest.fixture
-def category(app):
+def expense_category(app):
     with app.app_context():
-        category = ExpenseCategory(name="Test Category")
+        category = ExpenseCategory(name="Mortgage")
+        db.session.add(category)
+        db.session.commit()
+        category_id = category.id
+    return category_id
+
+
+@pytest.fixture
+def income_category(app):
+    with app.app_context():
+        category = IncomeCategory(name="Salary")
         db.session.add(category)
         db.session.commit()
         category_id = category.id

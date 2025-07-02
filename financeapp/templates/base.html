@@ -12,7 +12,6 @@
 <body class="d-flex flex-column min-vh-100">
     <header>
         <nav class="navbar navbar-expand-lg bg-body-tertiary">
-            <div class="container-fluid">
                 <a class="navbar-brand" href="{{ url_for('home.index') }}">Flask Finance</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false"
@@ -23,6 +22,7 @@
                     <div class="navbar-nav ms-auto">
                         {% if current_user.is_authenticated %}
                         <a class="nav-link active" aria-current="page" href="{{ url_for('finances.add_expense') }}">Add Expense</a>
+                        <a class="nav-link active" aria-current="page" href="{{ url_for('finances.add_income') }}">Add Income</a>
                         <a class="nav-link active" aria-current="page" href="{{ url_for('finances.my_finances') }}">View Finances</a>
                         <a class="nav-link active" aria-current="page" href="{{ url_for('profiles.profile') }}">Profile</a>
                         <a class="nav-link active" aria-current="page" href="{{ url_for('accounts.logout') }}">Sign Out</a>
@@ -31,7 +31,6 @@
                         {% endif %}
                     </div>
                 </div>
-            </div>
         </nav>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -45,8 +44,10 @@
     </header>
 
     <main>
-        {% block content %}
-        {% endblock %}
+        <div class="container">
+            {% block content %}
+            {% endblock %}
+        </div>
     </main>
 
     <footer class="mt-auto">

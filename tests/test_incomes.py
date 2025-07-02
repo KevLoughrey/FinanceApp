@@ -1,4 +1,4 @@
-from financeapp.finances.models import ExpenseCategory, Expense
+from financeapp.finances.models import IncomeCategory, Income
 from financeapp.accounts.models import User
 from financeapp.finances.utils import init_db
 from datetime import date
@@ -6,126 +6,127 @@ from decimal import Decimal
 import json
 
 
-def create_expense(db_session, user, expense_category):
-    expense = Expense(
-        name="Mortgage Payment",
+def create_income(db_session, user, income_category):
+    income = Income(
+        name="Salary",
         date=date(2025, 6, 1),
-        description="June mortgage payment",
-        amount=Decimal("1050.25"),
+        description="June salary payment",
+        amount=Decimal("3000.00"),
         user_id=user.id,
-        category_id=expense_category
+        category_id=income_category
     )
-    db_session.add(expense)
+    print(income_category)
+    db_session.add(income)
     db_session.commit()
-    return expense
+    return income
 
 
-def test_db_create_expense_category(db_session):
-    category = ExpenseCategory(name="Rent")
+def test_db_create_income_category(db_session):
+    category = IncomeCategory(name="Benefits")
     db_session.add(category)
     db_session.commit()
 
     assert category.id is not None
-    assert str(category) == "Rent"
+    assert str(category) == "Benefits"
 
 
-def test_db_create_expense(db_session, expense_category):
+def test_db_create_income(db_session, income_category):
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user, expense_category)
-
-    assert expense.id is not None
-    assert expense.name == "Mortgage Payment"
-    assert expense.amount == Decimal("1050.25")
-    assert expense.user == user
-    assert expense.category.name == "Mortgage"
+    income = create_income(db_session, user, income_category)
+    print(income)
+    assert income.id is not None
+    assert income.name == "Salary"
+    assert income.amount == Decimal("3000.00")
+    assert income.user == user
+    assert income.category.name == "Salary"
 
 
 def test_finance_init_db_creates_default_categories(app, db_session):
     with app.app_context():
         init_db()
-        categories = [cat.name for cat in ExpenseCategory.query.all()]
-        assert set(categories) == {'Mortgage', 'Rent', 'Groceries',
-                                   'Utilities', 'Transport', 'Other'}
+        categories = [cat.name for cat in IncomeCategory.query.all()]
+        assert set(categories) == {'Salary', 'Freelance', 'Savings',
+                                   'Benefits', 'Gifts', 'Other'}
 
 
 def test_finance_init_db_does_not_duplicate(app, db_session):
     with app.app_context():
-        db_session.add(ExpenseCategory(name='Mortgage'))
+        db_session.add(IncomeCategory(name='Salary'))
         db_session.commit()
 
         init_db()
 
-        count = ExpenseCategory.query.filter_by(name='Mortgage').count()
+        count = IncomeCategory.query.filter_by(name='Salary').count()
         assert count == 1
 
 
-def test_add_expense_requires_login(client, auth):
-    response = client.get("/finances/add_expense", follow_redirects=True)
+def test_add_income_requires_login(client, auth):
+    response = client.get("/finances/add_income", follow_redirects=True)
     assert b"login" in response.data
 
 
-def test_add_expense_get(client, auth):
+def test_add_income_get(client, auth):
     auth.login()
-    response = client.get("/finances/add_expense")
+    response = client.get("/finances/add_income")
     assert response.status_code == 200
-    assert b"Add Expense" in response.data
+    assert b"Add Income" in response.data
 
 
-def test_add_expense_success(client, auth, app, expense_category):
+def test_add_income_success(client, auth, app, income_category):
     auth.login()
-    response = client.post("/finances/add_expense", data={
-        "name": "Test Expense",
+    response = client.post("/finances/add_income", data={
+        "name": "Test Income",
         "date": "2025-01-01",
         "description": "Test description",
         "amount": "123.45",
-        "category": expense_category,
+        "category": income_category,
     }, follow_redirects=True)
     assert response.status_code == 200
 
     with app.app_context():
-        expense = Expense.query.filter_by(name="Test Expense").first()
-        assert expense is not None
-        assert float(expense.amount) == 123.45
+        income = Income.query.filter_by(name="Test Income").first()
+        assert income is not None
+        assert float(income.amount) == 123.45
 
 
-def test_add_expense_missing_required_fields(client, auth):
+def test_add_income_missing_required_fields(client, auth):
     auth.login()
-    response = client.post("/finances/add_expense", data={},
+    response = client.post("/finances/add_income", data={},
                            follow_redirects=True)
     assert response.status_code == 200
     assert response.data.count(b"This field is required") >= 3
 
 
-def test_add_expense_negative_amount(client, auth, expense_category):
+def test_add_income_negative_amount(client, auth, income_category):
     auth.login()
-    response = client.post("/finances/add_expense", data={
-        "name": "Test Expense",
+    response = client.post("/finances/add_income", data={
+        "name": "Test Income",
         "date": "2025-01-01",
         "description": "Test description",
         "amount": "-50.00",
-        "category": expense_category,
+        "category": income_category,
     }, follow_redirects=True)
     assert response.status_code == 200
     assert b"Amount must be a positive number" in response.data
 
 
-def test_add_expense_invalid_date_format(client, auth, expense_category):
+def test_add_income_invalid_date_format(client, auth, income_category):
     auth.login()
-    response = client.post("/finances/add_expense", data={
-        "name": "Test Expense",
+    response = client.post("/finances/add_income", data={
+        "name": "Test Income",
         "date": "lorem",
         "description": "Test description",
         "amount": "123.45",
-        "category": expense_category,
+        "category": income_category,
     }, follow_redirects=True)
     assert response.status_code == 200
     assert b"This field is required" in response.data
 
 
-def test_add_expense_invalid_category(client, auth):
+def test_add_income_invalid_category(client, auth):
     auth.login()
-    response = client.post("/finances/add_expense", data={
-        "name": "Test Expense",
+    response = client.post("/finances/add_income", data={
+        "name": "Test Income",
         "date": "2025-01-01",
         "description": "Test description",
         "amount": "123.45",
@@ -135,19 +136,20 @@ def test_add_expense_invalid_category(client, auth):
     assert b"Not a valid choice" in response.data
 
 
-def test_add_expense_amount_not_a_number(client, auth, expense_category):
+def test_add_income_amount_not_a_number(client, auth, income_category):
     auth.login()
-    response = client.post("/finances/add_expense", data={
-        "name": "Test Expense",
+    response = client.post("/finances/add_income", data={
+        "name": "Test Income",
         "date": "2025-01-01",
         "description": "Test description",
         "amount": "lorem",
-        "category": expense_category,
+        "category": income_category,
     }, follow_redirects=True)
     assert response.status_code == 200
     assert b"This field is required" in response.data
 
 
+"""
 def test_edit_expense_success(client, auth, db_session, expense_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
@@ -337,3 +339,4 @@ def test_delete_expense_requires_delete(client):
     response = client.post("/finances/delete_expense/1",
                            follow_redirects=True)
     assert response.status_code == 405
+"""
