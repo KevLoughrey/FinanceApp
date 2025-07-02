@@ -26,6 +26,9 @@ jobs:
           --health-retries=5
 
     env:
+      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      SECURITY_PASSWORD_SALT: ${{ secrets.SECURITY_PASSWORD_SALT }}
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
       FLASK_ENV: testing
 
