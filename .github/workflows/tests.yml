@@ -26,9 +26,6 @@ jobs:
           --health-retries=5
 
     env:
-      ADMIN_EMAIL: "test@test.com"
-      ADMIN_PASSWORD: "password"
-      SECURITY_PASSWORD_SALT: "salt"
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
       FLASK_ENV: testing
 

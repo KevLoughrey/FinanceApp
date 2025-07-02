@@ -50,7 +50,6 @@ def app():
             confirmed_at=None,
         )
         db.session.add(unconfirmed_user)
-        
         db.session.commit()
 
     yield app
