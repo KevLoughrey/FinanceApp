@@ -1,0 +1,34 @@
+<div class="row mb-3">
+    <div class="col-md-3 offset-md-3">
+        <label for="startMonth" class="form-label">Start Month</label>
+        <input type="month" class="form-control" id="startMonth">
+    </div>
+    <div class="col-md-3">
+        <label for="endMonth" class="form-label">End Month</label>
+        <input type="month" class="form-control" id="endMonth">
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+        <button id="filterCharts" class="btn btn-primary w-100">Filter</button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-3"></div>
+    <div class="col-3">
+        <h4>Expenses by Category</h4>
+        <canvas id="expenseChart"></canvas>
+    </div>
+    <div class="col-3">
+        <h4>Income by Category</h4>
+        <canvas id="incomeChart"></canvas>
+    </div>
+    <div class="col-3"></div>
+</div>
+<div class="row">
+    <div class="col-3"></div>
+    <div class="col-6">
+        <h4>Monthly Income vs Expenses</h4>
+        <canvas id="compChart"></canvas>
+    </div>
+    <div class="col-3"></div>
+</div>

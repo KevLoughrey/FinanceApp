@@ -1,10 +1,32 @@
-from flask import (Blueprint, render_template, redirect,
-                   url_for, request, jsonify)
-from flask_security import login_required, current_user
-from financeapp.finances.forms import ExpenseForm, IncomeForm
-from financeapp.finances.models import (Expense, ExpenseCategory,
-                                        Income, IncomeCategory)
+from flask import (
+    Blueprint,
+    render_template,
+    redirect,
+    url_for,
+    request,
+    jsonify,
+)
+from flask_security import (
+    login_required,
+    current_user,
+)
+from financeapp.finances.forms import (
+    ExpenseForm,
+    IncomeForm,
+)
+from financeapp.finances.models import (
+    Expense,
+    ExpenseCategory,
+    Income,
+    IncomeCategory,
+)
+from financeapp.finances.utils import (
+    get_category_totals,
+    get_monthly_totals,
+    get_monthly_chart_data,
+)
 from financeapp.database import db
+from datetime import datetime
 
 
 finances_bp = Blueprint('finances', __name__, template_folder='templates')
@@ -38,30 +60,29 @@ def add_expense():
 @finances_bp.route("/dashboard")
 @login_required
 def dashboard():
-    expenses = (
-        Expense.query
-        .filter_by(user_id=current_user.id)
-        .order_by(Expense.date.desc())
-        .all()
-    )
-    expense_categories = ExpenseCategory.query.order_by(
-        ExpenseCategory.name).all()
-
-    incomes = (
-        Income.query
-        .filter_by(user_id=current_user.id)
-        .order_by(Income.date.desc())
-        .all()
-    )
-    income_categories = IncomeCategory.query.order_by(
-        IncomeCategory.name).all()
+    user_id = current_user.id
 
     context = {
-        'expenses': expenses,
-        'expense_categories': expense_categories,
-        'incomes': incomes,
-        'income_categories': income_categories,
+        'expenses':
+            Expense.query.filter_by(user_id=user_id)
+            .order_by(Expense.date.desc()).all(),
+        'expense_categories':
+            ExpenseCategory.query
+            .order_by(ExpenseCategory.name).all(),
+        'incomes':
+            Income.query.filter_by(user_id=user_id)
+            .order_by(Income.date.desc()).all(),
+        'income_categories':
+            IncomeCategory.query
+            .order_by(IncomeCategory.name).all(),
+        'expense_data': get_category_totals(Expense, ExpenseCategory, user_id),
+        'income_data': get_category_totals(Income, IncomeCategory, user_id),
     }
+
+    expense_monthly = get_monthly_totals(Expense, user_id)
+    income_monthly = get_monthly_totals(Income, user_id)
+    context['monthly_data'] = get_monthly_chart_data(expense_monthly,
+                                                     income_monthly)
 
     return render_template("finances/dashboard.html", **context)
 
@@ -191,3 +212,39 @@ def delete_income(id):
     db.session.delete(income)
     db.session.commit()
     return jsonify({"success": True})
+
+
+@finances_bp.route("/get_date_range")
+@login_required
+def get_date_range():
+    user_id = current_user.id
+    start = request.args.get("start")
+    end = request.args.get("end")
+
+    start_date = datetime.strptime(start, "%Y-%m") if start else None
+    end_date = datetime.strptime(end, "%Y-%m") if end else None
+
+    raw_expense_totals = get_category_totals(
+        Expense, ExpenseCategory, user_id, start_date, end_date)
+    expense_totals = [
+        {"category": row[0], "total": float(row[1])}
+        for row in raw_expense_totals
+    ]
+
+    raw_income_totals = get_category_totals(
+        Income, IncomeCategory, user_id, start_date, end_date)
+    income_totals = [
+        {"category": row[0], "total": float(row[1])}
+        for row in raw_income_totals
+    ]
+
+    expense_monthly = get_monthly_totals(
+        Expense, user_id, start_date, end_date)
+    income_monthly = get_monthly_totals(Income, user_id, start_date, end_date)
+    monthly_data = get_monthly_chart_data(expense_monthly, income_monthly)
+
+    return jsonify({
+        'expense_data': expense_totals,
+        'income_data': income_totals,
+        'monthly_data': monthly_data
+    })

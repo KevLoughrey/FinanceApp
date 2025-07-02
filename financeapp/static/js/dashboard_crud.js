@@ -42,31 +42,31 @@ document.addEventListener('DOMContentLoaded', () => {
             data.amount = parseFloat(data.amount);
 
             fetch(`/finances/edit_${type}/${id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data),
-            })
-            .then(res => res.json())
-            .then(response => {
-                if (response.success) {
-                    const r = response[type];
-                    const row = document.getElementById(`${type}-row-${id}`);
-                    row.querySelector('.date').textContent = r.date;
-                    row.querySelector('.name').textContent = r.name;
-                    row.querySelector('.amount').textContent = `€${Number.parseFloat(r.amount).toFixed(2)}`;
-                    row.querySelector('.category').textContent = r.category_name;
-                    row.querySelector('.description').textContent = r.description || '-';
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data),
+                })
+                .then(res => res.json())
+                .then(response => {
+                    if (response.success) {
+                        const r = response[type];
+                        const row = document.getElementById(`${type}-row-${id}`);
+                        row.querySelector('.date').textContent = r.date;
+                        row.querySelector('.name').textContent = r.name;
+                        row.querySelector('.amount').textContent = `€${Number.parseFloat(r.amount).toFixed(2)}`;
+                        row.querySelector('.category').textContent = r.category_name;
+                        row.querySelector('.description').textContent = r.description || '-';
 
-                    toggleEditForm(type, id, false);
-                } else if (response.errors) {
-                    for (const [field, messages] of Object.entries(response.errors)) {
-                        const input = form.querySelector(`[name="${field}"]`);
-                        if (input) input.classList.add('is-invalid');
+                        toggleEditForm(type, id, false);
+                    } else if (response.errors) {
+                        for (const [field, messages] of Object.entries(response.errors)) {
+                            const input = form.querySelector(`[name="${field}"]`);
+                            if (input) input.classList.add('is-invalid');
+                        }
                     }
-                }
-            });
+                });
         });
     });
 
@@ -87,21 +87,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!itemIdToDelete || !itemTypeToDelete) return;
 
         fetch(`/finances/delete_${itemTypeToDelete}/${itemIdToDelete}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                document.getElementById(`${itemTypeToDelete}-row-${itemIdToDelete}`)?.remove();
-                document.getElementById(`${itemTypeToDelete}-edit-${itemIdToDelete}`)?.remove();
-            } else {
-                alert(`Failed to delete ${itemTypeToDelete}.`);
-            }
-            bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
-            itemIdToDelete = null;
-            itemTypeToDelete = null;
-        });
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById(`${itemTypeToDelete}-row-${itemIdToDelete}`)?.remove();
+                    document.getElementById(`${itemTypeToDelete}-edit-${itemIdToDelete}`)?.remove();
+                } else {
+                    alert(`Failed to delete ${itemTypeToDelete}.`);
+                }
+                bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+                itemIdToDelete = null;
+                itemTypeToDelete = null;
+            });
     });
 });
