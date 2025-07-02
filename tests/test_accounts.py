@@ -5,7 +5,7 @@ def test_profile_get(client, auth):
     auth.login()
     response = client.get("/profile/")
     assert response.status_code == 200
-    assert b"profile" in response.data
+    assert b"This is your page" in response.data
 
 
 def test_profile_requires_login(client):
