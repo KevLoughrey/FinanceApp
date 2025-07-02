@@ -26,7 +26,7 @@ def add_expense():
             )
             db.session.add(expense)
             db.session.commit()
-            return redirect(url_for('finances.my_finances'))
+            return redirect(url_for('finances.dashboard'))
 
     context = {
         'form': form,
@@ -35,9 +35,9 @@ def add_expense():
     return render_template('finances/add_expense.html', **context)
 
 
-@finances_bp.route("/my_finances")
+@finances_bp.route("/dashboard")
 @login_required
-def my_finances():
+def dashboard():
     expenses = (
         Expense.query
         .filter_by(user_id=current_user.id)
@@ -63,7 +63,7 @@ def my_finances():
         'income_categories': income_categories,
     }
 
-    return render_template("finances/my_finances.html", **context)
+    return render_template("finances/dashboard.html", **context)
 
 
 @finances_bp.route("/edit_expense/<int:id>", methods=["PATCH"])
@@ -133,7 +133,7 @@ def add_income():
             )
             db.session.add(income)
             db.session.commit()
-            return redirect(url_for('finances.my_finances'))
+            return redirect(url_for('finances.dashboard'))
 
     context = {
         'form': form,
