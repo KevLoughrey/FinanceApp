@@ -140,3 +140,54 @@ def add_income():
     }
 
     return render_template('finances/add_income.html', **context)
+
+
+@finances_bp.route("/edit_income/<int:id>", methods=["POST"])
+@login_required
+def edit_income(id):
+    income = Income.query.filter_by(id=id,
+                                    user_id=current_user.id).first_or_404()
+    data = request.get_json()
+
+    for key, value in data.items():
+        if value is None:
+            data[key] = ''
+    form = IncomeForm(data=data, meta={'csrf': False})
+
+    form.category.choices = [
+        (c.id, c.name) for c in IncomeCategory.query.order_by('name').all()]
+
+    if form.validate():
+        income.name = form.name.data
+        income.date = form.date.data
+        income.description = form.description.data
+        income.amount = form.amount.data
+        income.category_id = form.category.data
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "income": {
+                "id": income.id,
+                "name": income.name,
+                "date": income.date.strftime('%Y-%m-%d'),
+                "description": income.description or '',
+                "amount": str(income.amount),
+                "category_id": income.category_id,
+                "category_name": income.category.name
+            }
+        })
+
+    else:
+        return jsonify({"success": False, "errors": form.errors})
+
+
+@finances_bp.route("/delete_income/<int:id>", methods=["DELETE"])
+@login_required
+def delete_income(id):
+    income = Income.query.filter_by(id=id,
+                                    user_id=current_user.id).first_or_404()
+    db.session.delete(income)
+    db.session.commit()
+    return jsonify({"success": True})
