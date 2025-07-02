@@ -66,7 +66,7 @@ def my_finances():
     return render_template("finances/my_finances.html", **context)
 
 
-@finances_bp.route("/edit_expense/<int:id>", methods=["POST"])
+@finances_bp.route("/edit_expense/<int:id>", methods=["PATCH"])
 @login_required
 def edit_expense(id):
     expense = Expense.query.filter_by(id=id,
@@ -142,7 +142,7 @@ def add_income():
     return render_template('finances/add_income.html', **context)
 
 
-@finances_bp.route("/edit_income/<int:id>", methods=["POST"])
+@finances_bp.route("/edit_income/<int:id>", methods=["PATCH"])
 @login_required
 def edit_income(id):
     income = Income.query.filter_by(id=id,

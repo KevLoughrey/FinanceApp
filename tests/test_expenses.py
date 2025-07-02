@@ -160,9 +160,9 @@ def test_edit_expense_success(client, auth, db_session, expense_category):
         "amount": 999.99,
         "category": expense_category,
     }
-    response = client.post(f"/finances/edit_expense/{expense.id}",
-                           data=json.dumps(data),
-                           content_type="application/json")
+    response = client.patch(f"/finances/edit_expense/{expense.id}",
+                            data=json.dumps(data),
+                            content_type="application/json")
 
     assert response.status_code == 200
     result = response.get_json()
@@ -187,9 +187,9 @@ def test_edit_expense_invalid_category(client, auth, db_session,
         "amount": 50.00,
         "category": 1000,
     }
-    response = client.post(f"/finances/edit_expense/{expense.id}",
-                           data=json.dumps(data),
-                           content_type="application/json")
+    response = client.patch(f"/finances/edit_expense/{expense.id}",
+                            data=json.dumps(data),
+                            content_type="application/json")
 
     assert not response.get_json()["success"]
     assert "category" in response.get_json()["errors"]
@@ -208,9 +208,9 @@ def test_edit_expense_negative_amount(client, auth, db_session,
         "amount": -50.00,
         "category": expense_category,
     }
-    response = client.post(f"/finances/edit_expense/{expense.id}",
-                           data=json.dumps(data),
-                           content_type="application/json")
+    response = client.patch(f"/finances/edit_expense/{expense.id}",
+                            data=json.dumps(data),
+                            content_type="application/json")
 
     assert not response.get_json()["success"]
     assert "amount" in response.get_json()["errors"]
@@ -228,9 +228,9 @@ def test_edit_expense_invalid_date(client, auth, db_session, expense_category):
         "amount": 10.00,
         "category": expense_category,
     }
-    response = client.post(f"/finances/edit_expense/{expense.id}",
-                           data=json.dumps(data),
-                           content_type="application/json")
+    response = client.patch(f"/finances/edit_expense/{expense.id}",
+                            data=json.dumps(data),
+                            content_type="application/json")
 
     assert not response.get_json()["success"]
     assert "date" in response.get_json()["errors"]
@@ -242,9 +242,9 @@ def test_edit_expense_missing_fields(client, auth, db_session,
     user = User.query.filter_by(email="test@test.com").first()
     expense = create_expense(db_session, user, expense_category)
 
-    response = client.post(f"/finances/edit_expense/{expense.id}",
-                           data=json.dumps({}),
-                           content_type="application/json")
+    response = client.patch(f"/finances/edit_expense/{expense.id}",
+                            data=json.dumps({}),
+                            content_type="application/json")
 
     assert not response.get_json()["success"]
     assert "name" in response.get_json()["errors"]
@@ -263,9 +263,9 @@ def test_edit_expense_other_user_forbidden(client, auth,
         "amount": 10.0,
         "category": expense_category,
     }
-    response = client.post(f"/finances/edit_expense/{expense.id}",
-                           data=json.dumps(data),
-                           content_type="application/json")
+    response = client.patch(f"/finances/edit_expense/{expense.id}",
+                            data=json.dumps(data),
+                            content_type="application/json")
 
     assert response.status_code == 404
 
@@ -278,19 +278,21 @@ def test_edit_expense_not_found(client, auth):
                         "amount": 10,
                         "category": 1,
                     })
-    response = client.post("/finances/edit_expense/9999",
-                           data=data,
-                           content_type="application/json")
+    response = client.patch("/finances/edit_expense/9999",
+                            data=data,
+                            content_type="application/json")
     assert response.status_code == 404
 
 
-def test_edit_expense_requires_post(client):
+def test_edit_expense_requires_patch(client):
     response = client.get("/finances/edit_expense/1", follow_redirects=True)
+    assert response.status_code == 405
+    response = client.post("/finances/edit_expense/1", follow_redirects=True)
     assert response.status_code == 405
 
 
 def test_edit_expense_requires_login(client):
-    response = client.post("/finances/edit_expense/1", follow_redirects=True)
+    response = client.patch("/finances/edit_expense/1", follow_redirects=True)
     assert b"login" in response.data
 
 

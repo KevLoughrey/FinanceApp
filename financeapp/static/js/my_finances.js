@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data.amount = parseFloat(data.amount);
 
             fetch(`/finances/edit_${type}/${id}`, {
-                method: 'POST',
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
                 },
