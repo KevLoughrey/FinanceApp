@@ -59,7 +59,7 @@ def get_monthly_chart_data(expense_monthly, income_monthly):
     )
 
     month_labels = [
-        datetime(int(year), int(month), 1).strftime('%B %Y') 
+        datetime(int(year), int(month), 1).strftime('%B %Y')
         for year, month in all_months
     ]
 
