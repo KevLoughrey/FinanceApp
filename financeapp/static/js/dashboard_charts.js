@@ -30,3 +30,51 @@ new Chart(document.getElementById('incomeChart'), {
     },
     options: commonOptions,
 });
+
+new Chart(document.getElementById('compChart'), {
+    type: 'line',
+    data: {
+        labels: monthlyLabels,
+        datasets: [
+        {
+            label: 'Expenses',
+            data: monthlyExpenses,
+            borderColor: '#e74c3c',
+            tension: 0.3
+        },
+        {
+            label: 'Income',
+            data: monthlyIncome,
+            borderColor: '#2ecc71',
+            tension: 0.3
+        }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { mode: 'index', intersect: false }
+        },
+        interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
+        },
+        scales: {
+        y: {
+            beginAtZero: true,
+            title: {
+            display: true,
+            text: 'Amount'
+            }
+        },
+        x: {
+            title: {
+            display: true,
+            text: 'Month'
+            }
+        }
+        }
+    }
+    });

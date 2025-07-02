@@ -51,6 +51,9 @@
     const expenseData = {{ expense_data | map(attribute=1) | list | tojson }};
     const incomeLabels = {{ income_data | map(attribute=0) | list | tojson }};
     const incomeData = {{ income_data | map(attribute=1) | list | tojson }};
+    const monthlyLabels = {{ monthly_data.months | tojson }};
+    const monthlyExpenses = {{ monthly_data.expenses | tojson }};
+    const monthlyIncome = {{ monthly_data.income | tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/dashboard_charts.js') }}"></script>
 {% endblock %}

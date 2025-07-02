@@ -72,6 +72,56 @@ def dashboard():
         .all()
     )
 
+    expense_monthly = (
+        db.session.query(
+            func.date_trunc('month', Expense.date).label('month'),
+            func.sum(Expense.amount)
+        )
+        .filter(Expense.user_id == current_user.id)
+        .group_by('month')
+        .order_by('month')
+        .all()
+    )
+
+    income_monthly = (
+        db.session.query(
+            func.date_trunc('month', Income.date).label('month'),
+            func.sum(Income.amount)
+        )
+        .filter(Income.user_id == current_user.id)
+        .group_by('month')
+        .order_by('month')
+        .all()
+    )
+
+    def to_month_dict(rows):
+        return {
+            row[0].strftime('%Y-%m'): float(row[1]) for row in rows
+        }
+
+    # Get all months (as raw datetime.date objects)
+    all_months = sorted(set(
+        row[0] for row in expense_monthly + income_monthly))
+
+    # Convert to "Month YYYY" labels
+    month_labels = [m.strftime('%B %Y') for m in all_months]
+
+    expense_dict = {
+        m.strftime('%B %Y'): float(v)
+        for m, v in expense_monthly
+    }
+
+    income_dict = {
+        m.strftime('%B %Y'): float(v)
+        for m, v in income_monthly
+    }
+
+    monthly_data = {
+        'months': month_labels,
+        'expenses': [expense_dict.get(m, 0) for m in month_labels],
+        'income': [income_dict.get(m, 0) for m in month_labels],
+    }
+
     context = {
         'expenses': expenses,
         'expense_categories': expense_categories,
@@ -79,6 +129,7 @@ def dashboard():
         'income_categories': income_categories,
         'expense_data': expense_totals,
         'income_data': income_totals,
+        'monthly_data': monthly_data,
     }
 
     return render_template("finances/dashboard.html", **context)
