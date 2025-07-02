@@ -93,9 +93,19 @@ def db_session(app):
 
 
 @pytest.fixture
-def category(app):
+def expense_category(app):
     with app.app_context():
-        category = ExpenseCategory(name="Test Category")
+        category = ExpenseCategory(name="Mortgage")
+        db.session.add(category)
+        db.session.commit()
+        category_id = category.id
+    return category_id
+
+
+@pytest.fixture
+def income_category(app):
+    with app.app_context():
+        category = ExpenseCategory(name="Salary")
         db.session.add(category)
         db.session.commit()
         category_id = category.id

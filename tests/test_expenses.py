@@ -6,18 +6,14 @@ from decimal import Decimal
 import json
 
 
-def create_expense(db_session, user):
-    category = ExpenseCategory(name="Mortgage")
-    db_session.add(category)
-    db_session.commit()
-
+def create_expense(db_session, user, expense_category):
     expense = Expense(
         name="Mortgage Payment",
         date=date(2025, 6, 1),
         description="June mortgage payment",
         amount=Decimal("1050.25"),
         user_id=user.id,
-        category_id=category.id
+        category_id=expense_category
     )
     db_session.add(expense)
     db_session.commit()
@@ -33,9 +29,9 @@ def test_db_create_expense_category(db_session):
     assert str(category) == "Rent"
 
 
-def test_db_create_expense(db_session):
+def test_db_create_expense(db_session, expense_category):
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user)
+    expense = create_expense(db_session, user, expense_category)
 
     assert expense.id is not None
     assert expense.name == "Mortgage Payment"
@@ -54,12 +50,12 @@ def test_finance_init_db_creates_default_categories(app, db_session):
 
 def test_finance_init_db_does_not_duplicate(app, db_session):
     with app.app_context():
-        db_session.add(ExpenseCategory(name='Groceries'))
+        db_session.add(ExpenseCategory(name='Mortgage'))
         db_session.commit()
 
         init_db()
 
-        count = ExpenseCategory.query.filter_by(name='Groceries').count()
+        count = ExpenseCategory.query.filter_by(name='Mortgage').count()
         assert count == 1
 
 
@@ -75,14 +71,14 @@ def test_add_expense_get(client, auth):
     assert b"Add Expense" in response.data
 
 
-def test_add_expense_success(client, auth, app, category):
+def test_add_expense_success(client, auth, app, expense_category):
     auth.login()
     response = client.post("/finances/add_expense", data={
         "name": "Test Expense",
         "date": "2025-01-01",
         "description": "Test description",
         "amount": "123.45",
-        "category": category,
+        "category": expense_category,
     }, follow_redirects=True)
     assert response.status_code == 200
 
@@ -100,27 +96,27 @@ def test_add_expense_missing_required_fields(client, auth):
     assert response.data.count(b"This field is required") >= 3
 
 
-def test_add_expense_negative_amount(client, auth, category):
+def test_add_expense_negative_amount(client, auth, expense_category):
     auth.login()
     response = client.post("/finances/add_expense", data={
         "name": "Test Expense",
         "date": "2025-01-01",
         "description": "Test description",
         "amount": "-50.00",
-        "category": category,
+        "category": expense_category,
     }, follow_redirects=True)
     assert response.status_code == 200
     assert b"Amount must be a positive number" in response.data
 
 
-def test_add_expense_invalid_date_format(client, auth, category):
+def test_add_expense_invalid_date_format(client, auth, expense_category):
     auth.login()
     response = client.post("/finances/add_expense", data={
         "name": "Test Expense",
         "date": "lorem",
         "description": "Test description",
         "amount": "123.45",
-        "category": category,
+        "category": expense_category,
     }, follow_redirects=True)
     assert response.status_code == 200
     assert b"This field is required" in response.data
@@ -139,14 +135,14 @@ def test_add_expense_invalid_category(client, auth):
     assert b"Not a valid choice" in response.data
 
 
-def test_add_expense_amount_not_a_number(client, auth, category):
+def test_add_expense_amount_not_a_number(client, auth, expense_category):
     auth.login()
     response = client.post("/finances/add_expense", data={
         "name": "Test Expense",
         "date": "2025-01-01",
         "description": "Test description",
         "amount": "lorem",
-        "category": category,
+        "category": expense_category,
     }, follow_redirects=True)
     assert response.status_code == 200
     assert b"This field is required" in response.data
@@ -164,17 +160,17 @@ def test_my_finances_get(client, auth):
     assert b"my_finances" in response.data
 
 
-def test_edit_expense_success(client, auth, db_session, category):
+def test_edit_expense_success(client, auth, db_session, expense_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user)
+    expense = create_expense(db_session, user, expense_category)
 
     data = {
         "name": "Updated Name",
         "date": "1999-07-01",
         "description": "Updated description",
         "amount": 999.99,
-        "category": category,
+        "category": expense_category,
     }
     response = client.post(f"/finances/edit_expense/{expense.id}",
                            data=json.dumps(data),
@@ -190,10 +186,11 @@ def test_edit_expense_success(client, auth, db_session, category):
     assert result["expense"]["category_id"] == 1
 
 
-def test_edit_expense_invalid_category(client, auth, db_session):
+def test_edit_expense_invalid_category(client, auth, db_session,
+                                       expense_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user)
+    expense = create_expense(db_session, user, expense_category)
 
     data = {
         "name": "Bad Category",
@@ -210,17 +207,18 @@ def test_edit_expense_invalid_category(client, auth, db_session):
     assert "category" in response.get_json()["errors"]
 
 
-def test_edit_expense_negative_amount(client, auth, db_session, category):
+def test_edit_expense_negative_amount(client, auth, db_session,
+                                      expense_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user)
+    expense = create_expense(db_session, user, expense_category)
 
     data = {
         "name": "Bad Amount",
         "date": "2025-07-01",
         "description": "Negative",
         "amount": -50.00,
-        "category": category,
+        "category": expense_category,
     }
     response = client.post(f"/finances/edit_expense/{expense.id}",
                            data=json.dumps(data),
@@ -230,17 +228,17 @@ def test_edit_expense_negative_amount(client, auth, db_session, category):
     assert "amount" in response.get_json()["errors"]
 
 
-def test_edit_expense_invalid_date(client, auth, db_session, category):
+def test_edit_expense_invalid_date(client, auth, db_session, expense_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user)
+    expense = create_expense(db_session, user, expense_category)
 
     data = {
         "name": "Bad Date",
         "date": "not-a-date",
         "description": "error",
         "amount": 10.00,
-        "category": category,
+        "category": expense_category,
     }
     response = client.post(f"/finances/edit_expense/{expense.id}",
                            data=json.dumps(data),
@@ -250,10 +248,11 @@ def test_edit_expense_invalid_date(client, auth, db_session, category):
     assert "date" in response.get_json()["errors"]
 
 
-def test_edit_expense_missing_fields(client, auth, db_session):
+def test_edit_expense_missing_fields(client, auth, db_session,
+                                     expense_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user)
+    expense = create_expense(db_session, user, expense_category)
 
     response = client.post(f"/finances/edit_expense/{expense.id}",
                            data=json.dumps({}),
@@ -265,16 +264,16 @@ def test_edit_expense_missing_fields(client, auth, db_session):
 
 
 def test_edit_expense_other_user_forbidden(client, auth,
-                                           db_session, category):
+                                           db_session, expense_category):
     auth.login()
     other_user = User.query.filter_by(email="second@test.com").first()
-    expense = create_expense(db_session, other_user)
+    expense = create_expense(db_session, other_user, expense_category)
 
     data = {
         "name": "bad actor",
         "date": "2025-01-01",
         "amount": 10.0,
-        "category": category,
+        "category": expense_category,
     }
     response = client.post(f"/finances/edit_expense/{expense.id}",
                            data=json.dumps(data),
@@ -307,10 +306,11 @@ def test_edit_expense_requires_login(client):
     assert b"login" in response.data
 
 
-def test_delete_expense_success(client, auth, app, db_session, category):
+def test_delete_expense_success(client, auth, app, db_session,
+                                expense_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user)
+    expense = create_expense(db_session, user, expense_category)
 
     response = client.delete(f"/finances/delete_expense/{expense.id}")
     assert response.status_code == 200
@@ -326,10 +326,11 @@ def test_delete_expense_requires_login(client):
     assert b"login" in response.data
 
 
-def test_delete_expense_other_user_forbidden(client, auth, db_session):
+def test_delete_expense_other_user_forbidden(client, auth, db_session,
+                                             expense_category):
     auth.login()
     other_user = User.query.filter_by(email="second@test.com").first()
-    expense = create_expense(db_session, other_user)
+    expense = create_expense(db_session, other_user, expense_category)
 
     response = client.delete(f"/finances/delete_expense/{expense.id}")
     assert response.status_code == 404
