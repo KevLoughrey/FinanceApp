@@ -149,38 +149,37 @@ def test_add_income_amount_not_a_number(client, auth, income_category):
     assert b"This field is required" in response.data
 
 
-"""
-def test_edit_expense_success(client, auth, db_session, expense_category):
+def test_edit_income_success(client, auth, db_session, income_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user, expense_category)
+    income = create_income(db_session, user, income_category)
 
     data = {
         "name": "Updated Name",
         "date": "1999-07-01",
         "description": "Updated description",
         "amount": 999.99,
-        "category": expense_category,
+        "category": income_category,
     }
-    response = client.post(f"/finances/edit_expense/{expense.id}",
+    response = client.post(f"/finances/edit_income/{income.id}",
                            data=json.dumps(data),
                            content_type="application/json")
 
     assert response.status_code == 200
     result = response.get_json()
     assert result["success"]
-    assert result["expense"]["name"] == "Updated Name"
-    assert result["expense"]["description"] == "Updated description"
-    assert result["expense"]["date"] == "1999-07-01"
-    assert result["expense"]["amount"] == "999.99"
-    assert result["expense"]["category_id"] == 1
+    assert result["income"]["name"] == "Updated Name"
+    assert result["income"]["description"] == "Updated description"
+    assert result["income"]["date"] == "1999-07-01"
+    assert result["income"]["amount"] == "999.99"
+    assert result["income"]["category_id"] == 1
 
 
-def test_edit_expense_invalid_category(client, auth, db_session,
-                                       expense_category):
+def test_edit_income_invalid_category(client, auth, db_session,
+                                      income_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user, expense_category)
+    income = create_income(db_session, user, income_category)
 
     data = {
         "name": "Bad Category",
@@ -189,7 +188,7 @@ def test_edit_expense_invalid_category(client, auth, db_session,
         "amount": 50.00,
         "category": 1000,
     }
-    response = client.post(f"/finances/edit_expense/{expense.id}",
+    response = client.post(f"/finances/edit_income/{income.id}",
                            data=json.dumps(data),
                            content_type="application/json")
 
@@ -197,20 +196,20 @@ def test_edit_expense_invalid_category(client, auth, db_session,
     assert "category" in response.get_json()["errors"]
 
 
-def test_edit_expense_negative_amount(client, auth, db_session,
-                                      expense_category):
+def test_edit_income_negative_amount(client, auth, db_session,
+                                     income_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user, expense_category)
+    income = create_income(db_session, user, income_category)
 
     data = {
         "name": "Bad Amount",
         "date": "2025-07-01",
         "description": "Negative",
         "amount": -50.00,
-        "category": expense_category,
+        "category": income_category,
     }
-    response = client.post(f"/finances/edit_expense/{expense.id}",
+    response = client.post(f"/finances/edit_income/{income.id}",
                            data=json.dumps(data),
                            content_type="application/json")
 
@@ -218,19 +217,19 @@ def test_edit_expense_negative_amount(client, auth, db_session,
     assert "amount" in response.get_json()["errors"]
 
 
-def test_edit_expense_invalid_date(client, auth, db_session, expense_category):
+def test_edit_income_invalid_date(client, auth, db_session, income_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user, expense_category)
+    income = create_income(db_session, user, income_category)
 
     data = {
         "name": "Bad Date",
         "date": "not-a-date",
         "description": "error",
         "amount": 10.00,
-        "category": expense_category,
+        "category": income_category,
     }
-    response = client.post(f"/finances/edit_expense/{expense.id}",
+    response = client.post(f"/finances/edit_income/{income.id}",
                            data=json.dumps(data),
                            content_type="application/json")
 
@@ -238,13 +237,13 @@ def test_edit_expense_invalid_date(client, auth, db_session, expense_category):
     assert "date" in response.get_json()["errors"]
 
 
-def test_edit_expense_missing_fields(client, auth, db_session,
-                                     expense_category):
+def test_edit_income_missing_fields(client, auth, db_session,
+                                    income_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user, expense_category)
+    income = create_income(db_session, user, income_category)
 
-    response = client.post(f"/finances/edit_expense/{expense.id}",
+    response = client.post(f"/finances/edit_income/{income.id}",
                            data=json.dumps({}),
                            content_type="application/json")
 
@@ -253,26 +252,26 @@ def test_edit_expense_missing_fields(client, auth, db_session,
     assert "date" in response.get_json()["errors"]
 
 
-def test_edit_expense_other_user_forbidden(client, auth,
-                                           db_session, expense_category):
+def test_edit_income_other_user_forbidden(client, auth,
+                                          db_session, income_category):
     auth.login()
     other_user = User.query.filter_by(email="second@test.com").first()
-    expense = create_expense(db_session, other_user, expense_category)
+    income = create_income(db_session, other_user, income_category)
 
     data = {
         "name": "bad actor",
         "date": "2025-01-01",
         "amount": 10.0,
-        "category": expense_category,
+        "category": income_category,
     }
-    response = client.post(f"/finances/edit_expense/{expense.id}",
+    response = client.post(f"/finances/edit_income/{income.id}",
                            data=json.dumps(data),
                            content_type="application/json")
 
     assert response.status_code == 404
 
 
-def test_edit_expense_not_found(client, auth):
+def test_edit_income_not_found(client, auth):
     auth.login()
     data = json.dumps({
                         "name": "Test",
@@ -280,63 +279,62 @@ def test_edit_expense_not_found(client, auth):
                         "amount": 10,
                         "category": 1,
                     })
-    response = client.post("/finances/edit_expense/9999",
+    response = client.post("/finances/edit_income/9999",
                            data=data,
                            content_type="application/json")
     assert response.status_code == 404
 
 
-def test_edit_expense_requires_post(client):
-    response = client.get("/finances/edit_expense/1", follow_redirects=True)
+def test_edit_income_requires_post(client):
+    response = client.get("/finances/edit_income/1", follow_redirects=True)
     assert response.status_code == 405
 
 
-def test_edit_expense_requires_login(client):
-    response = client.post("/finances/edit_expense/1", follow_redirects=True)
+def test_edit_income_requires_login(client):
+    response = client.post("/finances/edit_income/1", follow_redirects=True)
     assert b"login" in response.data
 
 
-def test_delete_expense_success(client, auth, app, db_session,
-                                expense_category):
+def test_delete_income_success(client, auth, app, db_session,
+                               income_category):
     auth.login()
     user = User.query.filter_by(email="test@test.com").first()
-    expense = create_expense(db_session, user, expense_category)
+    income = create_income(db_session, user, income_category)
 
-    response = client.delete(f"/finances/delete_expense/{expense.id}")
+    response = client.delete(f"/finances/delete_income/{income.id}")
     assert response.status_code == 200
     assert response.get_json()["success"]
 
     with app.app_context():
-        assert db_session.get(Expense, expense.id) is None
+        assert db_session.get(Income, income.id) is None
 
 
-def test_delete_expense_requires_login(client):
-    response = client.delete("/finances/delete_expense/1",
+def test_delete_income_requires_login(client):
+    response = client.delete("/finances/delete_income/1",
                              follow_redirects=True)
     assert b"login" in response.data
 
 
-def test_delete_expense_other_user_forbidden(client, auth, db_session,
-                                             expense_category):
+def test_delete_income_other_user_forbidden(client, auth, db_session,
+                                            income_category):
     auth.login()
     other_user = User.query.filter_by(email="second@test.com").first()
-    expense = create_expense(db_session, other_user, expense_category)
+    income = create_income(db_session, other_user, income_category)
 
-    response = client.delete(f"/finances/delete_expense/{expense.id}")
+    response = client.delete(f"/finances/delete_income/{income.id}")
     assert response.status_code == 404
 
 
-def test_delete_expense_not_found(client, auth):
+def test_delete_income_not_found(client, auth):
     auth.login()
-    response = client.delete("/finances/delete_expense/99999")
+    response = client.delete("/finances/delete_income/99999")
     assert response.status_code == 404
 
 
-def test_delete_expense_requires_delete(client):
-    response = client.get("/finances/delete_expense/1",
+def test_delete_income_requires_delete(client):
+    response = client.get("/finances/delete_income/1",
                           follow_redirects=True)
     assert response.status_code == 405
-    response = client.post("/finances/delete_expense/1",
+    response = client.post("/finances/delete_income/1",
                            follow_redirects=True)
     assert response.status_code == 405
-"""
