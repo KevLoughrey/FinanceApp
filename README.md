@@ -107,3 +107,7 @@ The project was developed using an agile methodology with three defined sprints.
 |Selecting the Charts tab on finances/dashboard will show the user finance breakdown charts for all of their expenses and income|✅|
 |Selecting a start month but not an end month and clicking filter will show the user all finances from the start month to the present day|✅|
 |Selecting a start month and an end month and clicking filter will show the user all finances from those months (inclusive)|✅|
+
+## Credits
+* Royalty free Piggy Bank image by [Fabian Blank on Unsplash](https://unsplash.com/photos/pink-pig-figurine-on-white-surface-pElSkGRA2NU).
+* Website colour palette by [Anonymous on Coolors](https://coolors.co/palette/ff9f1c-ffbf69-ffffff-cbf3f0-2ec4b6).
